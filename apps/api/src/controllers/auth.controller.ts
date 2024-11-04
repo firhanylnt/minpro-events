@@ -3,15 +3,13 @@ import { PrismaClient } from "@prisma/client";
 import jwt from 'jsonwebtoken';
 import { JWT_SECRET } from '../config';
 import { genSalt, hash, compare } from "bcrypt";
-
 const prisma = new PrismaClient();
 
 export class AuthController {
     constructor() {
         this.createUser = this.createUser.bind(this); // Bind createUser to ensure 'this' is accessible
+        
     }
-    static getUsers: any;
-    
 
     private randomString(length: number) {
         let result = '';
@@ -27,7 +25,7 @@ export class AuthController {
 
     async createUser(req: Request, res: Response, next: NextFunction) {
         try {
-            const {fullname, email, password, phone_number, role_id} = req.body
+            const {fullname, email, password, phone_number, role, referral_code} = req.body
             const checkUser = await prisma.users.findUnique({
                 where: {email},
             });
@@ -37,17 +35,58 @@ export class AuthController {
             const salt = await genSalt(10);
             const hashPassword = await hash(password, salt)
 
-            const store = await prisma.users.create({
+            const user = await prisma.users.create({
                 data: {
                     fullname: fullname,
                     email: email,
                     phone_number: phone_number,
                     password: hashPassword,
-                    role_id: role_id,
-                    referral_code: this.randomString(8),
+                    role: role,
+                    referral_code: role === 'user' ? this.randomString(8) : null,
                     total_point: 0,
                 },
             })
+
+            if(referral_code && referral_code !== '') {
+                const ref = await prisma.users.findFirst({
+                    where: {referral_code}
+                })
+                if(ref){
+                    await prisma.referral_code_user.create({
+                        data: {
+                            user_id: user.id,
+                            master_user_id: ref.id,
+                        }
+                    });
+
+                    const expired_at = new Date();
+                    expired_at.setMonth(expired_at.getMonth() + 3);
+
+                    await prisma.points.create({
+                        data: {
+                            user_id: ref.id,
+                            point: 10000,
+                            expired_at: expired_at
+                        }
+                    })
+
+                    await prisma.vouchers.create({
+                        data: {
+                            user_id: user.id,
+                            category: 'unique',
+                            type: 'percentage',
+                            qty: 1,
+                            start_date: new Date(),
+                            end_date: expired_at,
+                            amount: 10,
+                            status: true,
+                            voucher_code: this.randomString(6)
+                        }
+                    })
+                }
+            }
+            
+
             res.status(200).send({
                 message: 'Success Register',
             })
@@ -77,7 +116,7 @@ export class AuthController {
             }
 
             const token = jwt.sign(
-                { userId: user.id, email: user.email, role: user.role_id, fullname: user.fullname, referralCode: user.referral_code },
+                { userId: user.id, email: user.email, role: user.role, fullname: user.fullname, referralCode: user.referral_code },
                 JWT_SECRET,
                 { expiresIn: '1h' }
             );
@@ -147,13 +186,26 @@ export class AuthController {
             prisma.$executeRaw`select * from`
     
             res.status(200).send({
-                message: 'sukses',
+                message: 'Get All Users Data',
                 data
             })
         } catch (error) {
-            console.log(error);
-            // next(error);
+            next(error);
         }
+    }
+
+    async getUserById(req: Request, res: Response, next: NextFunction) {
+        const { id } = req.params;
+
+        const user = await prisma.users.findUnique({
+            where: { id: Number(id) },
+        });
+
+        res.status(200).send({
+            message: 'Get User By Id',
+            data: user,
+        })
+
     }
     
 }

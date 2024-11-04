@@ -99,8 +99,8 @@ model Users {
   email String @unique
   phone_number String?
   password String
-  referral_code String
-  role_id Int
+  referral_code String?
+  role String @default("user")
   total_point Decimal @db.Decimal(10, 0)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -133,7 +133,7 @@ model Promotions {
 
 model Vouchers {
   id Int @id @default(autoincrement())
-  promotion_id Int
+  promotion_id Int?
   user_id Int
   payment_method Int?
   voucher_code String
@@ -144,7 +144,7 @@ model Vouchers {
   status Boolean
   start_date DateTime @db.DateTime
   end_date DateTime @db.DateTime
-  created_by Int
+  created_by Int?
   updated_by Int?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
