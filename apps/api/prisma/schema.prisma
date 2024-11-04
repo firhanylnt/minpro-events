@@ -93,17 +93,11 @@ model Transactions {
   deletedAt DateTime? @db.DateTime
 }
 
-model Roles {
-  id Int @id @default(autoincrement())
-  name String
-  users Users[]
-}
-
 model Users {
   id Int @id @default(autoincrement())
   fullname String
   email String @unique
-  phone_number Int?
+  phone_number String?
   password String
   referral_code String
   role_id Int
@@ -112,7 +106,6 @@ model Users {
   updatedAt DateTime @updatedAt
   deletedAt DateTime? @db.DateTime
   referral_code_user Referral_code_user[]
-  role Roles @relation(fields: [role_id], references: [id])
 }
 
 model Referral_code_user {
