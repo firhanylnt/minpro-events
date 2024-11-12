@@ -8,7 +8,7 @@ import express, {
   Router,
 } from 'express';
 import cors from 'cors';
-import { PORT } from './config';
+import { PORT, WEB_URL } from './config';
 import { AuthRouter } from './routers/auth.router';
 
 export default class App {
@@ -22,7 +22,10 @@ export default class App {
   }
 
   private configure(): void {
-    this.app.use(cors());
+    this.app.use(cors({
+      origin: WEB_URL || 'http://localhost:3001',
+      credentials: true,
+    }));
     this.app.use(json());
     this.app.use(urlencoded({ extended: true }));
   }

@@ -13,6 +13,6 @@
     }
   },
   // "include": ["src/**/*"],
-  "include": ["**/*.ts"],
+  "include": ["**/*.ts", "prisma/seed.mjs"],
   "exclude": ["node_modules"]
 }

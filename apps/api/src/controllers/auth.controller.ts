@@ -7,8 +7,7 @@ const prisma = new PrismaClient();
 
 export class AuthController {
     constructor() {
-        this.createUser = this.createUser.bind(this); // Bind createUser to ensure 'this' is accessible
-        
+        this.createUser = this.createUser.bind(this);
     }
 
     private randomString(length: number) {
@@ -25,7 +24,7 @@ export class AuthController {
 
     async createUser(req: Request, res: Response, next: NextFunction) {
         try {
-            const {fullname, email, password, phone_number, role, referral_code} = req.body
+            const {fullname, email, password, phone_number, role_id, referral_code} = req.body
             const checkUser = await prisma.users.findUnique({
                 where: {email},
             });
@@ -39,10 +38,10 @@ export class AuthController {
                 data: {
                     fullname: fullname,
                     email: email,
-                    phone_number: phone_number,
+                    phone_number: String(phone_number),
                     password: hashPassword,
-                    role: role,
-                    referral_code: role === 'user' ? this.randomString(8) : null,
+                    role_id: role_id,
+                    referral_code: role_id === 2 ? this.randomString(8) : null,
                     total_point: 0,
                 },
             })
@@ -88,7 +87,7 @@ export class AuthController {
             
 
             res.status(200).send({
-                message: 'Success Register',
+                message: 'Success Create User',
             })
         } catch (error) {
             next(error)
@@ -116,12 +115,12 @@ export class AuthController {
             }
 
             const token = jwt.sign(
-                { userId: user.id, email: user.email, role: user.role, fullname: user.fullname, referralCode: user.referral_code },
+                { userId: user.id, email: user.email, role: user.role_id, fullname: user.fullname },
                 JWT_SECRET,
                 { expiresIn: '1h' }
             );
 
-            res.status(200).send({
+            res.status(200).cookie("access_token", token).send({
                 message: 'Success Login',
                 token: token,
             })
@@ -150,9 +149,6 @@ export class AuthController {
     
             const data = await prisma.users.findMany({
                 where: {
-                    // fullname : {
-                    //     contains : filter.fullname
-                    // }
                     OR: [
                         {
                             fullname : {
