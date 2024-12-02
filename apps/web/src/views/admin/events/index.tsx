@@ -6,11 +6,11 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 export default function EventViews() {
-  const [data, setData] = useState<IEvents[]>([]); // Stores the event data
-  const [loading, setLoading] = useState(false); // To handle loading state
-  const [page, setPage] = useState(1); // Current page
-  const [pageSize, setPageSize] = useState(10); // Number of items per page
-  const [totalPages, setTotalPages] = useState(1); // Total number of pages
+  const [data, setData] = useState<IEvents[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
 
   const fetchData = async () => {
     setLoading(true);
@@ -35,7 +35,6 @@ export default function EventViews() {
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">Event List</h1>
 
-      {/* Table Section */}
       <table className="table-auto border-collapse border border-gray-300 w-full">
         <thead>
           <tr className="bg-gray-200">
@@ -72,13 +71,13 @@ export default function EventViews() {
                 </td>
                 <td className="border border-gray-300 px-4 py-2">{event.status === 1 ? 'Publish' : event.status === 2 ? 'Postponed' : event.status === 3 ? 'Completed' : 'Cancel'}</td>
                 <td className="border border-gray-300 px-4 py-2">
-                  {event.eventCategory?.name || "N/A"} {/* Assuming the eventCategory object has a 'name' */}
+                  {event.eventCategory?.name || "N/A"}
                 </td>
                 <td className="border border-gray-300 px-4 py-2">
-                  {event.cities?.city_name || "N/A"} {/* Assuming cities object has a 'city_name' */}
+                  {event.cities?.city_name || "N/A"} 
                 </td>
                 <td className="border border-gray-300 px-4 py-2">
-                  <Link href="#">View</Link>
+                <Link href={'/admin/events/'+event.id}>View</Link>
                 </td>
               </tr>
             ))
@@ -95,7 +94,6 @@ export default function EventViews() {
         </tbody>
       </table>
 
-      {/* Pagination Section */}
       <div className="flex justify-between items-center mt-4">
         <button
           onClick={() => setPage((prev) => Math.max(prev - 1, 1))}

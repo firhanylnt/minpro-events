@@ -60,8 +60,6 @@ export class EventController {
                 
             })
     
-            // prisma.$executeRaw`select * from`
-    
             res.status(200).send({
                 message: 'Get All Event Data',
                 data
@@ -82,6 +80,98 @@ export class EventController {
             res.status(200).send({
                 message: 'Get Event',
                 data
+            })
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async detailRegistered(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { id } = req.params;
+
+            interface IFilter {
+                keyword?: string;
+                page: number;
+                pageSize: number;
+            }
+
+            const {page, pageSize} = req.query;
+    
+            const filter: IFilter = {
+                page: parseInt(page as string) || 1,
+                pageSize: parseInt(pageSize as string) || 10,
+            };
+    
+            const registered = await prisma.transactions.findMany({
+                select: {
+                    id: true,
+                    qty: true,
+                    user: {
+                        select: {
+                            fullname: true,
+                            email: true,
+                        },
+                    },
+                },
+                where: {
+                  status: 1,
+                  event_id: Number(id),
+                },
+                skip: filter.page != 1 ? (filter.page - 1) * filter.pageSize : 0,
+                take: filter.pageSize,
+            });
+
+            res.status(200).send({
+                message: 'Get Detail Event',
+                registered,
+            })
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async detailTransactions(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { id } = req.params;
+
+            interface IFilter {
+                keyword?: string;
+                page: number;
+                pageSize: number;
+            }
+
+            const {page, pageSize} = req.query;
+    
+            const filter: IFilter = {
+                page: parseInt(page as string) || 1,
+                pageSize: parseInt(pageSize as string) || 10,
+            };
+    
+            const transactions = await prisma.transactions.findMany({
+                select: {
+                    id: true,
+                    code: true,
+                    total_amount: true,
+                    status: true,
+                    qty: true,
+                    createdAt: true,
+                    user: {
+                        select: {
+                            fullname: true,
+                        },
+                    },
+                },
+                where: {
+                  event_id: Number(id),
+                },
+                skip: filter.page != 1 ? (filter.page - 1) * filter.pageSize : 0,
+                take: filter.pageSize,
+            });
+    
+            res.status(200).send({
+                message: 'Get Detail Event',
+                transactions,
             })
         } catch (error) {
             next(error);

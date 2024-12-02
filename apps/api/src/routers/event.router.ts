@@ -15,7 +15,8 @@ export class EventRouter {
 
   private initializeRoutes(): void {
     this.router.get('/', VerifyToken, AdminGuard, this.eventController.getAllEvent);
-    this.router.get('/:slug', VerifyToken ,this.eventController.getEventBySlug);
+    this.router.get('/detail-registered/:id', VerifyToken, AdminGuard,this.eventController.detailRegistered);
+    this.router.get('/detail-transactions/:id', VerifyToken, AdminGuard,this.eventController.detailTransactions);
     this.router.post('/', VerifyToken, AdminGuard, this.eventController.createEvent);
     this.router.post('/:id', VerifyToken, AdminGuard, this.eventController.updateEvent);
   }
