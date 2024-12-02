@@ -24,98 +24,115 @@ export class AuthController {
 
     async createUser(req: Request, res: Response, next: NextFunction) {
         try {
-            const {fullname, email, password, phone_number, role_id, referral_code} = req.body
+            const {fullname, email, password, phone_number, role, organizer_name, referral_code} = req.body
             const checkUser = await prisma.users.findUnique({
                 where: {email},
             });
 
             if(checkUser) throw new Error("Email sudah terdaftar");
 
+            const roles = await prisma.roles.findUnique({
+                where: { name: role },
+            });
+        
+            if (!roles) throw new Error("Role tidak ada");
+
             const salt = await genSalt(10);
-            const hashPassword = await hash(password, salt)
+            const hashPassword = await hash(password, salt);
 
-            const user = await prisma.users.create({
-                data: {
-                    fullname: fullname,
-                    email: email,
-                    phone_number: String(phone_number),
-                    password: hashPassword,
-                    role_id: role_id,
-                    referral_code: role_id === 2 ? this.randomString(8) : null,
-                    total_point: 0,
-                },
-            })
-
-            if(referral_code && referral_code !== '') {
-                const ref = await prisma.users.findFirst({
-                    where: {referral_code}
-                })
-                if(ref){
-                    await prisma.referral_code_user.create({
+            await prisma.$transaction(async (prisma) => {
+                let organizer = null;
+                if(roles.id === 1){
+                    organizer = await prisma.organizer.create({
                         data: {
-                            user_id: user.id,
-                            master_user_id: ref.id,
+                            name: organizer_name,
                         }
                     });
-
-                    const expired_at = new Date();
-                    expired_at.setMonth(expired_at.getMonth() + 3);
-
-                    await prisma.points.create({
-                        data: {
-                            user_id: ref.id,
-                            point: 10000,
-                            expired_at: expired_at
-                        }
-                    })
-
-                    await prisma.vouchers.create({
-                        data: {
-                            user_id: user.id,
-                            category: 'unique',
-                            type: 'percentage',
-                            qty: 1,
-                            start_date: new Date(),
-                            end_date: expired_at,
-                            amount: 10,
-                            status: true,
-                            voucher_code: this.randomString(6)
-                        }
-                    })
                 }
-            }
-            
+
+                const user = await prisma.users.create({
+                    data: {
+                        fullname: fullname,
+                        email: email,
+                        phone_number: String(phone_number),
+                        password: hashPassword,
+                        role_id: roles.id,
+                        organizer_id: roles.id === 1 ? organizer?.id : null,
+                        referral_code: roles.id !== 1 ? this.randomString(8) : null,
+                        total_point: 0,
+                    },
+                });
+
+                if(referral_code && referral_code !== '') {
+                    const ref = await prisma.users.findFirst({
+                        where: {referral_code}
+                    })
+                    if(ref){
+                        await prisma.referral_code_user.create({
+                            data: {
+                                user_id: user.id,
+                                master_user_id: ref.id,
+                            }
+                        });
+
+                        const expired_at = new Date();
+                        expired_at.setMonth(expired_at.getMonth() + 3);
+
+                        await prisma.points.create({
+                            data: {
+                                user_id: ref.id,
+                                point: 10000,
+                                expired_at: expired_at
+                            }
+                        });
+
+                        await prisma.vouchers.create({
+                            data: {
+                                user_id: user.id,
+                                category: 'unique',
+                                type: 'percentage',
+                                qty: 1,
+                                start_date: new Date(),
+                                end_date: expired_at,
+                                amount: 10,
+                                status: true,
+                                voucher_code: this.randomString(6)
+                            }
+                        });
+                    }else{
+                        throw new Error("Referral code tidak valid")
+                    }
+                }
+            });
 
             res.status(200).send({
                 message: 'Success Create User',
             })
         } catch (error) {
             next(error)
-        }
+        } 
     }
 
     async login(req: Request, res: Response, next: NextFunction) {
         try {
-            const {email, password} = req.body;
+            const {email, password, role} = req.body;
 
-            const user = await prisma.users.findUnique({ where: { email } });
+            const roles = await prisma.roles.findUnique({
+                where: { name: role },
+            });
+        
+            if (!roles) throw new Error("Role tidak ada");
+
+            const user = await prisma.users.findUnique({ where: { email : email, role_id: roles.id} });
             
-            if (!user) {
-                return res.status(401).send({
-                    message: 'Email Tidak Terdaftar',
-                })
-            }
+            if (!user) throw new Error("User Tidak Terdaftar");
 
             const isPasswordValid = await compare(password, user.password);
 
-            if (!isPasswordValid) {
-                return res.status(401).send({
-                    message: 'Password Salah',
-                }) 
-            }
+            if (!isPasswordValid) throw new Error("Password salah");
 
             const token = jwt.sign(
-                { userId: user.id, email: user.email, role: user.role_id, fullname: user.fullname },
+                { email: user.email, role: user.role_id, name: user.fullname },
                 JWT_SECRET,
                 { expiresIn: '1h' }
             );
@@ -179,7 +196,7 @@ export class AuthController {
                 
             })
     
-            prisma.$executeRaw`select * from`
+            // prisma.$executeRaw`select * from`
     
             res.status(200).send({
                 message: 'Get All Users Data',

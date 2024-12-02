@@ -16,6 +16,17 @@ enum SaleType {
   free
 }
 
+model Organizer {
+  id Int @id @default(autoincrement())
+  name String
+  status Boolean @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+  deletedAt DateTime? @db.DateTime
+  events Events[]
+  users Users[]
+}
+
 // declare table
 model Events {
   id Int @id @default(autoincrement())
@@ -28,17 +39,20 @@ model Events {
   city_id Int?
   location String? @db.VarChar(100)
   description String? @db.Text
-  seats Int?
+  quota Int?
   event_type_id Int?
   event_category_id Int?
+  organizer_id Int
   created_by Int
   updated_by Int?
   sale_type SaleType?
+  status Int
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  updatedAt DateTime @default(now())
   deletedAt DateTime? @db.DateTime
   eventType Event_type? @relation(fields: [event_type_id], references: [id])
   eventCategory Event_category? @relation(fields: [event_category_id], references: [id])
+  organizer Organizer @relation(fields: [organizer_id], references: [id])
   rating Event_reviews_ratings []
   promotions Promotions[]
   cities Cities? @relation(fields: [city_id], references: [id])
@@ -47,13 +61,13 @@ model Events {
 
 model Event_category {
   id Int @id @default(autoincrement())
-  name String
+  name String @unique
   events Events[]
 }
 
 model Event_type {
   id Int @id @default(autoincrement())
-  name String
+  name String @unique
   events Events[]
 }
 
@@ -68,14 +82,14 @@ model Event_reviews_ratings {
 
 model Countries {
   id Int @id @default(autoincrement())
-  name String
+  name String @unique
   regions Regions[]
 }
 
 model Regions {
   id Int @id @default(autoincrement())
   country_id Int
-  region_name String
+  region_name String @unique
   countries Countries @relation(fields: [country_id], references: [id])
   cities Cities[]
 }
@@ -83,7 +97,7 @@ model Regions {
 model Cities {
   id Int @id @default(autoincrement())
   region_id Int
-  city_name String
+  city_name String @unique
   regions Regions @relation(fields: [region_id], references: [id])
   events Events[]
 }
@@ -99,9 +113,9 @@ model Transactions {
   total_amount Decimal @db.Decimal(10, 0)
   voucher_id Int?
   payment_method_id Int
-  status String
+  status Int @default(1)
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  updatedAt DateTime @default(now())
   deletedAt DateTime? @db.DateTime
   user Users @relation(fields: [user_id], references: [id])
   payment_method Payment_method @relation(fields: [payment_method_id], references: [id])
@@ -116,12 +130,15 @@ model Users {
   password String
   referral_code String?
   role_id Int @default(1)
+  organizer_id Int?
   total_point Decimal @db.Decimal(10, 0)
+  status Boolean @default(true)
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  updatedAt DateTime @default(now())
   deletedAt DateTime? @db.DateTime
   referral_code_user Referral_code_user[]
   role Roles @relation(fields: [role_id], references: [id])
+  organizer Organizer? @relation(fields: [organizer_id], references: [id])
   transactions Transactions[]
   vouchers Vouchers[]
   tickets Tickets[]
@@ -153,7 +170,7 @@ model Promotions {
   created_by Int
   updated_by Int?
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  updatedAt DateTime @default(now())
   deletedAt DateTime? @db.DateTime
   events Events? @relation(fields: [event_id], references: [id])
   vouchers Vouchers[]
@@ -175,7 +192,7 @@ model Vouchers {
   created_by Int?
   updated_by Int?
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  updatedAt DateTime @default(now())
   deletedAt DateTime? @db.DateTime
   user Users? @relation(fields: [user_id],references: [id])
   promotions Promotions? @relation(fields: [promotion_id], references: [id])
@@ -183,7 +200,7 @@ model Vouchers {
 
 model Payment_method {
   id Int @id @default(autoincrement())
-  name String
+  name String @unique
   admin_fee Decimal @db.Decimal(10, 0)
   transactions Transactions[]
 }
@@ -205,7 +222,7 @@ model Tickets {
   status String
   valid_until DateTime @db.DateTime
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  updatedAt DateTime @default(now())
   deletedAt DateTime? @db.DateTime
   transaction Transactions @relation(fields: [transaction_id], references: [id])
   users Users @relation(fields: [user_id], references: [id])

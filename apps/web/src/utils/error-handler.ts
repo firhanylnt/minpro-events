@@ -3,6 +3,7 @@ import { isAxiosError } from "axios";
 export default function ErrorHandler(err: any) {
   let message = err.message;
   if (isAxiosError(err)) {
+    console.log(err)
     message = err.response?.data.message;
   }
   Swal.fire({

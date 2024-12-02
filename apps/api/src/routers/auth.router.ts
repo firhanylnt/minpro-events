@@ -1,7 +1,8 @@
 
 import { AuthController } from '@/controllers/auth.controller';
-import { authMiddleware } from '@/middlewares/authMiddleware';
+import { VerifyToken, AdminGuard } from "../middlewares/authMiddleware";
 import { Router } from 'express';
+import { RegisterValidation, LoginValidation } from "../middlewares/validations/auth.validation";
 
 export class AuthRouter {
   private router: Router;
@@ -14,10 +15,10 @@ export class AuthRouter {
   }
 
   private initializeRoutes(): void {
-    this.router.get('/', authMiddleware ,this.authController.getUsers);
-    this.router.get('/:id', this.authController.getUsers);
-    this.router.post('/register', this.authController.createUser);
-    this.router.post('/login', this.authController.login);
+    this.router.get('/', VerifyToken, AdminGuard ,this.authController.getUsers);
+    this.router.get('/:id', VerifyToken, AdminGuard,this.authController.getUsers);
+    this.router.post('/register', RegisterValidation, this.authController.createUser);
+    this.router.post('/login', LoginValidation, this.authController.login);
   }
 
   getRouter(): Router {

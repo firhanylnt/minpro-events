@@ -10,6 +10,11 @@ import express, {
 import cors from 'cors';
 import { PORT, WEB_URL } from './config';
 import { AuthRouter } from './routers/auth.router';
+import { EventRouter } from './routers/event.router';
+import { TransactionRouter } from './routers/transaction.router';
+
+import helmet from "helmet";
+import ErrorMiddleware from "./middlewares/errorMiddleware";
 
 export default class App {
   private app: Express;
@@ -17,50 +22,32 @@ export default class App {
   constructor() {
     this.app = express();
     this.configure();
-    this.routes();
-    this.handleError();
   }
 
   private configure(): void {
     this.app.use(cors({
-      origin: WEB_URL || 'http://localhost:3001',
+      origin: WEB_URL || 'http://localhost:3000',
       credentials: true,
     }));
     this.app.use(json());
     this.app.use(urlencoded({ extended: true }));
-  }
-
-  private handleError(): void {
-    // not found
-    this.app.use((req: Request, res: Response, next: NextFunction) => {
-      if (req.path.includes('/api/')) {
-        res.status(404).send('Not found !');
-      } else {
-        next();
-      }
-    });
-
-    // error
-    this.app.use(
-      (err: Error, req: Request, res: Response, next: NextFunction) => {
-        if (req.path.includes('/api/')) {
-          console.error('Error : ', err.stack);
-          res.status(500).send('Error !');
-        } else {
-          next();
-        }
-      },
-    );
+    this.app.use(helmet());
+    this.routes();
+    this.app.use(ErrorMiddleware);
   }
 
   private routes(): void {
     const authRouter = new AuthRouter();
+    const eventRouter = new EventRouter();
+    const transactionRouter = new TransactionRouter();
 
     this.app.get('/api', (req: Request, res: Response) => {
       res.send(`Hello, Purwadhika Student API!`);
     });
 
     this.app.use('/api/auth', authRouter.getRouter());
+    this.app.use('/api/events', eventRouter.getRouter());
+    this.app.use('/api/transactions', transactionRouter.getRouter());
   }
 
   public start(): void {

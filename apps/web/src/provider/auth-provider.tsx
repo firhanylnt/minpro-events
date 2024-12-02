@@ -8,7 +8,7 @@ import Swal from "sweetalert2";
 type Token = {
   email: string;
   name: string;
-  role: string;
+  role: number;
   iat: number;
   exp: number;
 };

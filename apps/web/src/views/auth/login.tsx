@@ -8,7 +8,7 @@ import { jwtDecode } from "jwt-decode";
 import { deleteCookie, getCookie, setCookie } from "cookies-next";
 import useAuthStore, { IUser } from "@/stores/auth-store";
 import axiosInstance from "@/utils/axios";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 interface ILogin {
     email: string;
@@ -34,6 +34,7 @@ const HandleLogin = async (onAuthSuccess: (user: IUser | null) => void) => {
 
 export default function LoginForm() {
     const { onAuthSuccess, user } = useAuthStore();
+    const [isAdmin, setIsAdmin] = useState(false);
     const router = useRouter();
 
     const login = async (params: ILogin) => {
@@ -48,7 +49,7 @@ export default function LoginForm() {
             showConfirmButton: false,
             timer: 2000,
           }).then(() => {
-            if (user?.role === '1') {
+            if (isAdmin) {
                 router.push("/admin");
             } else {
                 router.push("/");
@@ -63,8 +64,11 @@ export default function LoginForm() {
         initialValues: {
             email: '',
             password: '',
+            role: '',
         },
         validationSchema: Yup.object({
+            role: Yup.string()
+                .required("Required"),
             email: Yup.string()
                 .email("Invalid email address")
                 .required("Required"),
@@ -86,6 +90,31 @@ export default function LoginForm() {
             <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-md">
                 <h2 className="text-2xl font-bold text-center text-gray-800">Login</h2>
                 <form onSubmit={formik.handleSubmit} className="space-y-4">
+                <div>
+                    <label htmlFor="role" className="block text-sm font-medium text-gray-600">
+                        Role
+                    </label>
+                    <select
+                        id="role"
+                        onChange={(e) => {
+                            const selectedValue = e.target.value;
+                            if (selectedValue === "Admin") {
+                              setIsAdmin(true)
+                            }else{
+                                setIsAdmin(false)
+                            }
+                            formik.setFieldValue("role", selectedValue); // Update Formik state
+                        }}
+                        className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                        <option value="" label="Pilih Tipe Akun" />
+                        <option value="Admin" label="Event Organizer" />
+                        <option value="User" label="Customer" />
+                    </select>
+                    {formik.touched.role && formik.errors.role ? (
+                        <p className="text-sm text-red-600">{formik.errors.role}</p>
+                    ) : null}
+                </div>
                     <div>
                         <label htmlFor="email" className="block text-sm font-medium text-gray-600">
                             Email

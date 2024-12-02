@@ -1,9 +1,9 @@
 
 import { EventController } from '@/controllers/event.controller';
-import { authMiddleware } from '@/middlewares/authMiddleware';
+import { VerifyToken, AdminGuard } from "../middlewares/authMiddleware";
 import { Router } from 'express';
 
-export class AuthRouter {
+export class EventRouter {
   private router: Router;
   private eventController: EventController;
 
@@ -14,10 +14,10 @@ export class AuthRouter {
   }
 
   private initializeRoutes(): void {
-    this.router.get('/', authMiddleware ,this.eventController.getAllEvent);
-    // this.router.get('/:id', this.eventController.getUsers);
-    // this.router.post('/', this.eventController.createUser);
-    // this.router.post('/:id', this.eventController.login);
+    this.router.get('/', VerifyToken, AdminGuard, this.eventController.getAllEvent);
+    this.router.get('/:slug', VerifyToken ,this.eventController.getEventBySlug);
+    this.router.post('/', VerifyToken, AdminGuard, this.eventController.createEvent);
+    this.router.post('/:id', VerifyToken, AdminGuard, this.eventController.updateEvent);
   }
 
   getRouter(): Router {

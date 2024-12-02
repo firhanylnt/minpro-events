@@ -4,7 +4,7 @@ import { cookies } from "next/headers";
 import { jwtDecode } from "jwt-decode";
 import { IUser } from "./stores/auth-store";
 
-const protectedRoutes = ["/admin", "/dashboard"];
+const protectedRoutes = ["/admin","login"];
 
 export default async function middleware(req: NextRequest) {
   try {
@@ -20,14 +20,21 @@ export default async function middleware(req: NextRequest) {
     }
 
     const user: IUser = jwtDecode(token);
-    console.log(user)
 
     if (
       isProtected &&
       req.nextUrl.pathname.startsWith("/admin") &&
-      user.role != "1"
+      user.role !== 1
     ) {
       return NextResponse.redirect(new URL("/", req.nextUrl));
+    }
+
+    if (token && req.nextUrl.pathname == '/login') {
+      if (user.role == 1) {
+        return NextResponse.redirect(new URL('/admin', req.url));
+      } else {
+        return NextResponse.redirect(new URL('/', req.url));
+      }
     }
 
     return NextResponse.next();

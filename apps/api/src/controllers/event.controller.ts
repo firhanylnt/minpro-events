@@ -123,12 +123,13 @@ export class EventController {
                 city_id,
                 location,
                 description,
-                seats,
+                quota,
                 event_type,
                 event_category,
                 sale_type,
                 created_by,
-                organizer_id
+                organizer_id,
+                status,
             } = req.body;
 
             const checkSlug = await prisma.events.findFirst({
@@ -136,7 +137,7 @@ export class EventController {
             });
             let usedSlug = slug;
             if(checkSlug){
-                usedSlug = slug + this.randomString(4)
+                usedSlug = slug + '-' + this.randomString(4)
             }
 
             const event = await prisma.events.create({
@@ -150,12 +151,13 @@ export class EventController {
                     city_id: city_id,
                     location: location,
                     description: description,
-                    seats: seats ?? null,
+                    quota: quota ?? null,
                     event_type_id: event_type,
                     event_category_id: event_category,
                     sale_type: sale_type,
                     created_by: created_by,
                     organizer_id: organizer_id,
+                    status: status,
                 },
             });
             res.status(200).send({
@@ -179,11 +181,10 @@ export class EventController {
                 city_id,
                 location,
                 description,
-                seats,
+                quota,
                 event_type,
                 event_category,
                 sale_type,
-                created_by,
                 organizer_id
             } = req.body;
 
@@ -204,10 +205,11 @@ export class EventController {
                     city_id: city_id,
                     location: location,
                     description: description,
-                    seats: seats,
+                    quota: quota,
                     event_type_id: event_type,
                     event_category_id: event_category,
                     sale_type: sale_type,
+                    organizer_id: organizer_id
                 },
             })
             

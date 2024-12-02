@@ -2,10 +2,9 @@ import { create } from "zustand";
 import { deleteCookie } from "cookies-next";
 
 export interface IUser {
-  userID: number;
   name: string;
   email: string;
-  role: string;
+  role: number;
 }
 
 interface IAuthStore {

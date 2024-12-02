@@ -1,27 +1,35 @@
-import { Request, Response, NextFunction } from 'express';
-import jwt from 'jsonwebtoken';
-import { JWT_SECRET } from '../config';
+import { Request, Response, NextFunction } from "express";
+import { JWT_SECRET } from "../config";
+import { User } from "../custom";
+import { verify } from "jsonwebtoken";
 
-interface AuthRequest extends Request {
-    user?: { userId: number; role: string };
+async function VerifyToken(req: Request, res: Response, next: NextFunction) {
+  try {
+    const token = req.header("Authorization")?.replace("Bearer ", "");
+
+    if (!token) throw new Error("Unauthorized");
+
+    const user = verify(token, JWT_SECRET as string);
+
+    if (!user) throw new Error("Unauthorized");
+
+    req.user = user as User;
+
+    next();
+  } catch (err) {
+    next(err);
+  }
 }
 
-export const authMiddleware = (req: AuthRequest, res: Response, next: NextFunction) => {
-    const token = req.headers.authorization?.split(' ')[1];
-    if (!token) return res.status(401).json({ message: 'Unauthorized' });
+async function AdminGuard(req: Request, res: Response, next: NextFunction) {
+  try {
+    console.log(req.user?.role);
+    if (String(req.user?.role) !== "1") throw new Error("Not an Admin");
 
-    try {
-        const decoded = jwt.verify(token, JWT_SECRET) as AuthRequest['user'];
-        req.user = decoded;
-        next();
-    } catch (error) {
-        res.status(401).json({ message: 'Invalid token' });
-    }
-};
-
-export const adminMiddleware = (req: AuthRequest, res: Response, next: NextFunction) => {
-    if (req.user?.role !== 'admin') {
-        return res.status(403).json({ message: 'Forbidden: Admins only' });
-    }
     next();
-};
+  } catch (err) {
+    next(err);
+  }
+}
+
+export { VerifyToken, AdminGuard };
