@@ -132,7 +132,7 @@ export class AuthController {
             if (!isPasswordValid) throw new Error("Password salah");
 
             const token = jwt.sign(
-                { email: user.email, role: user.role_id, name: user.fullname },
+                { email: user.email, role: user.role_id, name: user.fullname, organizer: user.organizer_id },
                 JWT_SECRET,
                 { expiresIn: '1h' }
             );

@@ -9,6 +9,7 @@ import { deleteCookie, getCookie, setCookie } from "cookies-next";
 import useAuthStore, { IUser } from "@/stores/auth-store";
 import axiosInstance from "@/utils/axios";
 import { useEffect, useState } from "react";
+import Link from "next/link";
 
 interface ILogin {
     email: string;
@@ -149,6 +150,9 @@ export default function LoginForm() {
                     >
                         Login
                     </button>
+                    <div>
+                        <span>Dont have an account? <Link href={'register'}>Register Here</Link> </span>
+                    </div>
                 </form>
             </div>
         </div>

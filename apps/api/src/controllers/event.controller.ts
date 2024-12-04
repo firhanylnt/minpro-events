@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction} from "express";
 import { PrismaClient } from "@prisma/client";
+import { User } from "../custom";
 const prisma = new PrismaClient();
 
 export class EventController {
@@ -28,9 +29,9 @@ export class EventController {
                 pageSize: number;
             }
 
-            console.log(req.query);
-    
             const {page, pageSize} = req.query;
+
+            const { organizer } = req.user as User;
     
             const filter: IFilter = {
                 page: parseInt(page as string) || 1,
@@ -52,6 +53,7 @@ export class EventController {
                             { cities: { city_name: { contains: filter.keyword } } },
                           ],
                         },
+                        {organizer_id: organizer},
                         { deletedAt: null }
                     ],
                 },

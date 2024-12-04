@@ -58,8 +58,6 @@ export default function Navbar() {
           <>
             <Link href={'/admin/events'}>Event</Link>
             <Link href={'/admin/report'}>Report</Link>
-            <Link href={'/admin/promotions'}>Promotions</Link>
-            <Link href={'/admin/vouchers'}>Vouchers</Link>
           </>
         ) : (
           <>
@@ -71,12 +69,11 @@ export default function Navbar() {
         
         {user ? (
           <div className="flex flex-col md:flex-row gap-4 items-center">
-            <p>Welcome, {user.name}</p>
             <button
-              className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+              className="text-black"
               onClick={() => {
                 clearAuth();
-                router.push("/");
+                router.push("/login");
               }}
             >
               Logout

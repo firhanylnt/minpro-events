@@ -40,6 +40,7 @@ export default function EventViews() {
           <tr className="bg-gray-200">
             <th className="border border-gray-300 px-4 py-2">Name</th>
             <th className="border border-gray-300 px-4 py-2">Slug</th>
+            <th className="border border-gray-300 px-4 py-2">Price</th>
             <th className="border border-gray-300 px-4 py-2">Start Date</th>
             <th className="border border-gray-300 px-4 py-2">End Date</th>
             <th className="border border-gray-300 px-4 py-2">Status</th>
@@ -63,6 +64,7 @@ export default function EventViews() {
               <tr key={event.id} className="hover:bg-gray-100">
                 <td className="border border-gray-300 px-4 py-2">{event.name}</td>
                 <td className="border border-gray-300 px-4 py-2">{event.slug}</td>
+                <td className="border border-gray-300 px-4 py-2">{event.price}</td>
                 <td className="border border-gray-300 px-4 py-2">
                   {new Date(event.start_date).toLocaleDateString()}
                 </td>
